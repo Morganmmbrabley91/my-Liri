@@ -1,7 +1,7 @@
 {
-  "name": "liribot-node-app",
+  "name": "my-Liri",
   "version": "0.1.0",
-  "description": "LIRI is a Language Interpretation and Recognition Interface.",
+  "description": "LIRI helping you find what you need.",
   "main": "liri.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
