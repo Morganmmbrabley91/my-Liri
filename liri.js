@@ -37,7 +37,6 @@ function processCommands(command, commandParam){
 }
 }
 function getMyTweets(){
-
 	var params = {screen_name: 'morganb64905593', count: 20, exclude_replies:true, trim_user:true};
 		client.get('statuses/user_timeline', params, function(error, tweets, response) {
 				if (!error) {
@@ -70,10 +69,8 @@ function spotifyThis(song){
     }
     console.log("------Song Name-----");
     console.log(song.name);
-
 	console.log("-------Preview Link-----");
     console.log(song.preview_url);
-
     console.log("-------Album-----");
     console.log(song.album.name);
 	});
@@ -102,20 +99,16 @@ function movieThis(movieName){
 	   		}
 	   		console.log("--------Plot----------------");
 	   		console.log(movieObj.overview);
-
 	   		console.log("--------Actors-----------");
 	   		for(i=0, j = movieObj.credits.cast.length; i<j; i++){
 	   			console.log(movieObj.credits.cast[i].name);
 	   		}
 	    });
-
   	}else{
   		console.log(error);
   	}
-
 	});
 }
-
 function doWhatItSays(){
 	fs.readFile('random.txt', 'utf8', function(err, data){
 		if (err){ 
