@@ -1,121 +1,143 @@
-var Twitter = require('twitter');
-var spotify = require('spotify');
-var request = require('request');
-var fs = require('fs');
-var keys = require("./keys.js");
-var tweetsArray = [];
-var inputCommand = process.argv[2];
-var commandParam = process.argv[3];
-var defaultMovie = "Grind";
-var defaultSong = "Superman";
-var twitterKeys = keys.twitterKeys;
-var tmdbKey = keys.tmdbKey;
-var client = new Twitter({
-  consumer_key: twitterKeys.consumer_key,
-  consumer_secret: twitterKeys.consumer_secret,
-  access_token_key: twitterKeys.access_token_key,
-  access_token_secret: twitterKeys.access_token_secret
-});
-function processCommands(command, commandParam){
-	switch(command){
-	case 'my-tweets':
-		getMyTweets(); break;
-	case 'spotify-this-song':
-		if(commandParam === undefined){
-			commandParam = defaultSong;
-		}     
-		spotifyThis(commandParam); break;
-	case 'movie-this':
-		if(commandParam === undefined){
-			commandParam = defaultMovie;
-		}    
-		movieThis(commandParam); break;
-	case 'do-what-it-says':
-		doWhatItSays(); break;
-	default: 
-		console.log("Did not understand, please try again");
-}
-}
-function getMyTweets(){
-	var params = {screen_name: 'morganb64905593', count: 20, exclude_replies:true, trim_user:true};
-		client.get('statuses/user_timeline', params, function(error, tweets, response) {
-				if (!error) {
-					tweetsArray = tweets;
-					for(i=0; i<tweetsArray.length; i++){
-						console.log("Created at: " + tweetsArray[i].created_at);
-						console.log("Text: " + tweetsArray[i].text);
-						console.log('--------------------------------------');
-					}
-				}
-				else{
-					console.log(error);
-				}
-	});
+require("dotenv").config();
 
-}
-function spotifyThis(song){
-	if(song === ""){
-		song = "Superman";
-	}
-	spotify.search({ type: 'track', query: song}, function(err, data) {
-    if (err) {
-        console.log('Error occurred: ' + err);
+var Spotify = require("node-spotify-api");
+
+var keys = require("./keys");
+
+var request = require("request");
+
+var moment = require("moment");
+
+var fs = require("fs");
+
+var spotify = new Spotify(keys.spotify);
+
+
+var getArtistNames = function(artist) {
+  return artist.name;
+};
+
+var getMeSpotify = function(songName) {
+  if (songName === undefined) {
+    songName = "Superman";
+  }
+
+  spotify.search(
+    {
+      type: "track",
+      query: songName
+    },
+    function(err, data) {
+      if (err) {
+        console.log("Error occurred: " + err);
         return;
+      }
+
+      var songs = data.tracks.items;
+
+      for (var i = 0; i < songs.length; i++) {
+        console.log(i);
+        console.log("artist(s): " + songs[i].artists.map(getArtistNames));
+        console.log("song name: " + songs[i].name);
+        console.log("preview song: " + songs[i].preview_url);
+        console.log("album: " + songs[i].album.name);
+        console.log("-----------------------------------");
+      }
     }
-    var song = data.tracks.items[0];
-    console.log("------Artists-----");
-    for(i=0; i<song.artists.length; i++){
-    	console.log(song.artists[i].name);
+  );
+};
+
+var getMyBands = function(artist) {
+  var queryURL = "https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp";
+
+  request(queryURL, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+      var jsonData = JSON.parse(body);
+
+      if (!jsonData.length) {
+        console.log("No results found for " + artist);
+        return;
+      }
+
+      console.log("Upcoming shows for " + artist + ":");
+
+      for (var i = 0; i < jsonData.length; i++) {
+        var show = jsonData[i];
+
+        console.log(
+          show.venue.city +
+            "," +
+            (show.venue.region || show.venue.country) +
+            " at " +
+            show.venue.name +
+            " " +
+            moment(show.datetime).format("MM/DD/YYYY")
+        );
+      }
     }
-    console.log("------Song Name-----");
-    console.log(song.name);
-	console.log("-------Preview Link-----");
-    console.log(song.preview_url);
-    console.log("-------Album-----");
-    console.log(song.album.name);
-	});
-}
-function movieThis(movieName){
-	console.log(movieName);
-	request("https://api.themoviedb.org/3/search/movie?api_key=" + tmdbKey + "&query=" + movieName, function(error, response, body) {
-  	if (!error && response.statusCode === 200) {
-	    var movieID =  JSON.parse(body).results[0].id;
-	    var queryURL = "https://api.themoviedb.org/3/movie/" + movieID + "?api_key=" + tmdbKey + "&append_to_response=credits,releases";
-	    request(queryURL, function(error, response, body) {
-	    	var movieObj = JSON.parse(body);
-	    	console.log("--------Title-----------");
-	    	console.log(movieObj.original_title);
-	    	console.log("--------Year -----------");
-	    	console.log(movieObj.release_date.substring(0,4));
-	   		console.log("--------Rating-----------");
-	   		console.log(movieObj.releases.countries[0].certification);
-	   		console.log("--------Country Produced-----------");
-	   		for(i=0, j = movieObj.production_countries.length; i<j; i++){
-	   			console.log(movieObj.production_countries[i].name);
-	   		}
-	   		console.log("--------Languages-----------");
-	   		for(i=0, j = movieObj.spoken_languages.length; i<j; i++){
-	   			console.log(movieObj.spoken_languages[i].name);
-	   		}
-	   		console.log("--------Plot----------------");
-	   		console.log(movieObj.overview);
-	   		console.log("--------Actors-----------");
-	   		for(i=0, j = movieObj.credits.cast.length; i<j; i++){
-	   			console.log(movieObj.credits.cast[i].name);
-	   		}
-	    });
-  	}else{
-  		console.log(error);
-  	}
-	});
-}
-function doWhatItSays(){
-	fs.readFile('random.txt', 'utf8', function(err, data){
-		if (err){ 
-			return console.log(err);
-		}
-		var dataArr = data.split(',');
-		processCommands(dataArr[0], dataArr[1]);
-	});
-}
-processCommands(inputCommand, commandParam);
+  });
+};
+
+var getMeMovie = function(movieName) {
+  if (movieName === undefined) {
+    movieName = "The Boondock Saints";
+  }
+
+  var urlHit =
+    "http://www.omdbapi.com/?t=" + movieName + "&y=&plot=full&tomatoes=true&apikey=trilogy";
+
+  request(urlHit, function(error, response, body) {
+    if (!error && response.statusCode === 200) {
+      var jsonData = JSON.parse(body);
+
+      console.log("Title: " + jsonData.Title);
+      console.log("Year: " + jsonData.Year);
+      console.log("Rated: " + jsonData.Rated);
+      console.log("IMDB Rating: " + jsonData.imdbRating);
+      console.log("Country: " + jsonData.Country);
+      console.log("Language: " + jsonData.Language);
+      console.log("Plot: " + jsonData.Plot);
+      console.log("Actors: " + jsonData.Actors);
+      console.log("Rotten Tomatoes Rating: " + jsonData.Ratings[1].Value);
+    }
+  });
+};
+
+var doWhatItSays = function() {
+  fs.readFile("random.txt", "utf8", function(error, data) {
+    console.log(data);
+
+    var dataArr = data.split(",");
+
+    if (dataArr.length === 2) {
+      pick(dataArr[0], dataArr[1]);
+    } else if (dataArr.length === 1) {
+      pick(dataArr[0]);
+    }
+  });
+};
+
+var pick = function(caseData, functionData) {
+  switch (caseData) {
+  case "concert":
+    getMyBands(functionData);
+    break;
+  case "spotify":
+    getMeSpotify(functionData);
+    break;
+  case "movie":
+    getMeMovie(functionData);
+    break;
+  case "do-it":
+    doWhatItSays();
+    break;
+  default:
+    console.log("???????");
+  }
+};
+
+var runThis = function(argOne, argTwo) {
+  pick(argOne, argTwo);
+};
+
+runThis(process.argv[2], process.argv.slice(3).join(" "));

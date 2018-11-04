@@ -1,23 +1,17 @@
 {
-  "name": "my-Liri",
-  "version": "0.1.0",
-  "description": "LIRI helping you find what you need.",
-  "main": "liri.js",
+  "name": "my-liri",
+  "version": "1.0.0",
+  "description": "",
+  "main": "keys.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/Morganmmbrabley91/my-Liri"
-  },
-  "author": "Morgan Bradley",
+  "author": "",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Morganmmbrabley91/my-Liri/issues"
-  },
   "dependencies": {
-    "request": "^2.79.0",
-    "spotify": "^0.3.0",
-    "twitter": "^1.7.0"
+    "dotenv": "^6.0.0",
+    "moment": "^2.22.2",
+    "node-spotify-api": "^1.0.7",
+    "request": "^2.88.0"
   }
 }
